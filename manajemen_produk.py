@@ -197,8 +197,8 @@ class ManajemenProduk(BaseDataPage):
         jumlah_satuan = database.get_rows_produk(0)
         jumlah_paket = database.get_rows_produk(1)
 
-        data_satuan = database.get_produk_satuan(max(1, jumlah_satuan), 0)
-        data_paket = database.get_produk_paket(max(1, jumlah_paket), 0)
+        data_satuan = database.get_produk_satuan(jumlah_satuan, 0) if jumlah_satuan > 0 else []
+        data_paket = database.get_produk_paket(jumlah_paket, 0) if jumlah_paket > 0 else []
 
         headers = [
             "nama", "sku", "jenis", "harga_beli",
@@ -247,7 +247,11 @@ class ManajemenProduk(BaseDataPage):
                 writer = csv.DictWriter(file, fieldnames=headers)
                 writer.writeheader()
                 writer.writerows(data_export)
-            CustomMessageBox.information(self, "Berhasil", f"Data berhasil disimpan ke:\n{path}")
+            CustomMessageBox.information(
+                self,
+                "Berhasil",
+                f"Data berhasil disimpan ke:\n{path}\n\nJumlah data: {len(data_export)}"
+            )
         except Exception as error:
             CustomMessageBox.critical(
                 self,
