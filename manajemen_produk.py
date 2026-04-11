@@ -229,7 +229,7 @@ class ManajemenProduk(BaseDataPage):
                 "nama_barang_satuan": item.get("nama", ""),
             })
 
-        default_name = f"produk_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        default_name = f"produk_{datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y%m%d_%H%M%S')}.csv"
         path, _ = QFileDialog.getSaveFileName(
             self,
             "Simpan Data Produk",
@@ -248,7 +248,11 @@ class ManajemenProduk(BaseDataPage):
                 writer.writerows(data_export)
             CustomMessageBox.information(self, "Berhasil", f"Data berhasil disimpan ke:\n{path}")
         except Exception as error:
-            CustomMessageBox.critical(self, "Gagal", f"Gagal menyimpan data:\n{error}")
+            CustomMessageBox.critical(
+                self,
+                "Gagal",
+                f"Gagal menyimpan data ({type(error).__name__}):\n{error}"
+            )
 
     def _switch_product_view(self, index: int):
         """Switch tampilan tabel berdasarkan pilihan selector"""
