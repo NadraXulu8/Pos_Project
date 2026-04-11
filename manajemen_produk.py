@@ -211,9 +211,9 @@ class ManajemenProduk(BaseDataPage):
                 "nama": item.get("nama_barang", ""),
                 "sku": item.get("sku", ""),
                 "jenis": "satuan",
-                "harga_beli": item.get("harga_beli", "") or "",
-                "harga_jual": item.get("harga_jual", "") or "",
-                "stok": item.get("stock", "") or "",
+                "harga_beli": item.get("harga_beli", ""),
+                "harga_jual": item.get("harga_jual", ""),
+                "stok": item.get("stock", ""),
                 "konversi": "",
                 "nama_barang_satuan": "",
             })
@@ -224,9 +224,9 @@ class ManajemenProduk(BaseDataPage):
                 "sku": item.get("sku", ""),
                 "jenis": "paket",
                 "harga_beli": "",
-                "harga_jual": item.get("harga_jual", "") or "",
+                "harga_jual": item.get("harga_jual", ""),
                 "stok": "",
-                "konversi": item.get("jumlah", "") or "",
+                "konversi": item.get("jumlah", ""),
                 "nama_barang_satuan": item.get("nama", ""),
             })
 
