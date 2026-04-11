@@ -276,6 +276,7 @@ class BaseDataPage(QWidget):
             }
         """)
         content_layout.addWidget(button_reset)
+        self._add_bottom_left_buttons(content_layout)
         content_layout.addStretch()
 
         button_left = NavigationButton("data/arah kiri.svg", "data/kiri-hover.svg")
@@ -352,4 +353,8 @@ class BaseDataPage(QWidget):
 
     def on_reset_click(self):
         """Hook for additional reset actions in subclasses"""
+        pass
+
+    def _add_bottom_left_buttons(self, layout):
+        """Hook for adding extra buttons beside reset in bottom navigation."""
         pass
