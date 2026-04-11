@@ -21,6 +21,7 @@ class ManajemenProduk(BaseDataPage):
     """Widget utama untuk manajemen produk"""
     HEADER_TITLE = "MANAJEMEN PRODUK"
     SEARCH_PLACEHOLDER = "Cari Produk atau SKU ..."
+    TIMEZONE = "Asia/Jakarta"
 
     # Konstanta
     SELECTOR_HEIGHT = 35
@@ -229,7 +230,7 @@ class ManajemenProduk(BaseDataPage):
                 "nama_barang_satuan": item.get("nama", ""),
             })
 
-        default_name = f"produk_{datetime.now(ZoneInfo('Asia/Jakarta')).strftime('%Y%m%d_%H%M%S')}.csv"
+        default_name = f"produk_{datetime.now(ZoneInfo(self.TIMEZONE)).strftime('%Y%m%d_%H%M%S')}.csv"
         path, _ = QFileDialog.getSaveFileName(
             self,
             "Simpan Data Produk",
@@ -251,7 +252,8 @@ class ManajemenProduk(BaseDataPage):
             CustomMessageBox.critical(
                 self,
                 "Gagal",
-                f"Gagal menyimpan data ({type(error).__name__}):\n{error}"
+                f"Gagal menyimpan data ke file CSV.\n"
+                f"Pastikan lokasi penyimpanan memiliki izin tulis.\n\nDetail: {error}"
             )
 
     def _switch_product_view(self, index: int):
