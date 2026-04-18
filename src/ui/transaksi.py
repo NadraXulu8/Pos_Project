@@ -545,13 +545,28 @@ class PenjualanWindow(QWidget):
 
         return self.search_suggestions[0] if self.search_suggestions else None
 
-    def _add_product_from_search(self):
-        keyword = self.search_input.text().strip().lower()
-        if not keyword:
-            self.search_hint_label.setText("Masukkan SKU atau nama produk terlebih dahulu.")
-            return
+    def _get_product_from_completer_selection(self):
+        popup = self.search_completer.popup()
+        if popup is None or not popup.isVisible():
+            return None
 
-        product = self._find_exact_product(keyword)
+        index = popup.currentIndex()
+        selected_text = index.data(Qt.ItemDataRole.DisplayRole) if index.isValid() else ""
+        if not selected_text:
+            selected_text = self.search_completer.currentCompletion()
+        if not selected_text:
+            return None
+
+        return self.search_lookup.get(str(selected_text))
+
+    def _add_product_from_search(self):
+        product = self._get_product_from_completer_selection()
+        if not product:
+            keyword = self.search_input.text().strip().lower()
+            if not keyword:
+                self.search_hint_label.setText("Masukkan SKU atau nama produk terlebih dahulu.")
+                return
+            product = self._find_exact_product(keyword)
         if not product:
             self.search_hint_label.setText("Produk tidak ditemukan untuk kata kunci tersebut.")
             return
