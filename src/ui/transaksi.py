@@ -551,8 +551,9 @@ class PenjualanWindow(QWidget):
             return None
 
         index = popup.currentIndex()
-        selected_text = index.data(Qt.ItemDataRole.DisplayRole) if index.isValid() else ""
-        if not selected_text:
+        if index.isValid():
+            selected_text = index.data(Qt.ItemDataRole.DisplayRole)
+        else:
             selected_text = self.search_completer.currentCompletion()
         if not selected_text:
             return None
