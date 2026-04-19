@@ -4,7 +4,7 @@ from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
     QFrame, QLabel, QLineEdit, QComboBox, QPushButton, QTableWidget, QAbstractItemView, QHeaderView, QGridLayout,
-    QTextEdit, QCompleter, QTableWidgetItem, QSpinBox, QAbstractSpinBox, QScrollArea, QCheckBox, QDialog, QApplication
+    QTextEdit, QCompleter, QTableWidgetItem, QSpinBox, QAbstractSpinBox, QScrollArea, QCheckBox, QDialog
 )
 
 from config import asset_path, asset_uri
@@ -513,6 +513,9 @@ class PenjualanWindow(QWidget):
         self.customer_completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
 
     def _handle_search_text_changed(self, text: str):
+        if self._skip_next_search_submit and not text:
+            self._skip_next_search_submit = False
+
         if text in self.search_lookup:
             return
 
@@ -541,7 +544,7 @@ class PenjualanWindow(QWidget):
         if not product:
             return
 
-        self._skip_next_search_submit = QApplication.mouseButtons() == Qt.MouseButton.NoButton
+        self._skip_next_search_submit = True
         self._add_product_to_cart(product)
         self.search_hint_label.setText(f"Produk {product['nama_barang']} ditambahkan ke keranjang.")
         QTimer.singleShot(0, self.search_input.clear)
