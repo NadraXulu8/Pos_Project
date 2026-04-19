@@ -636,7 +636,7 @@ class PenjualanWindow(QWidget):
     def _get_product_signature(self, product: dict):
         """
         Signature untuk mencegah double-add pada siklus event Qt yang sama
-        (mis. activated completer + returnPressed terpanggil berurutan).
+        (mis. activated completer + returnPressed dipanggil berurutan).
         """
         product_id = product.get("id")
         sku = product.get("sku")
