@@ -635,6 +635,7 @@ class PenjualanWindow(QWidget):
 
     def _get_product_signature(self, product: dict):
         return (
+            str(product.get("id", "")),
             str(product.get("sku", "")),
             str(product.get("tipe", "")).casefold(),
         )
