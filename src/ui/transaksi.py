@@ -634,10 +634,21 @@ class PenjualanWindow(QWidget):
         self._pending_search_add_signature = None
 
     def _get_product_signature(self, product: dict):
+        """
+        Signature untuk mencegah double-add pada siklus event Qt yang sama
+        (mis. activated completer + returnPressed terpanggil berurutan).
+        """
+        product_id = product.get("id")
+        sku = product.get("sku")
+        tipe = product.get("tipe")
+
+        if product_id is None and sku is None and tipe is None:
+            return ("__object__", str(id(product)))
+
         return (
-            str(product.get("id", "")),
-            str(product.get("sku", "")),
-            str(product.get("tipe", "")).casefold(),
+            str(product_id or ""),
+            str(sku or ""),
+            str(tipe or "").casefold(),
         )
 
     def _add_product_to_cart_once_per_event_cycle(self, product: dict):
