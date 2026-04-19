@@ -33,7 +33,7 @@ class PenjualanWindow(QWidget):
         self.cart_items = []
         self.search_suggestions = []
         self.search_lookup = {}
-        self._skip_next_search_submit = False
+        self._skip_submit_after_completer = False
         self.discount_popup = None
 
         self.setup_ui()
@@ -513,8 +513,8 @@ class PenjualanWindow(QWidget):
         self.customer_completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
 
     def _handle_search_text_changed(self, text: str):
-        if self._skip_next_search_submit and not text:
-            self._skip_next_search_submit = False
+        if self._skip_submit_after_completer and (not text or text not in self.search_lookup):
+            self._skip_submit_after_completer = False
 
         if text in self.search_lookup:
             return
@@ -544,7 +544,7 @@ class PenjualanWindow(QWidget):
         if not product:
             return
 
-        self._skip_next_search_submit = True
+        self._skip_submit_after_completer = True
         self._add_product_to_cart(product)
         self.search_hint_label.setText(f"Produk {product['nama_barang']} ditambahkan ke keranjang.")
         QTimer.singleShot(0, self.search_input.clear)
@@ -613,8 +613,8 @@ class PenjualanWindow(QWidget):
         return self.search_lookup.get(str(selected_text))
 
     def _add_product_from_search(self):
-        if self._skip_next_search_submit:
-            self._skip_next_search_submit = False
+        if self._skip_submit_after_completer:
+            self._skip_submit_after_completer = False
             return
 
         product = self._get_product_from_completer_selection()
