@@ -542,13 +542,10 @@ class PenjualanWindow(QWidget):
             return
 
         self._skip_next_search_submit = True
-        QTimer.singleShot(0, self._reset_search_submit_guard)
+        QTimer.singleShot(0, lambda: setattr(self, "_skip_next_search_submit", False))
         self._add_product_to_cart(product)
         self.search_hint_label.setText(f"Produk {product['nama_barang']} ditambahkan ke keranjang.")
         QTimer.singleShot(0, self.search_input.clear)
-
-    def _reset_search_submit_guard(self):
-        self._skip_next_search_submit = False
 
     def _refresh_search_suggestions(self, keyword: str = ""):
         keyword = keyword.strip()
@@ -615,7 +612,6 @@ class PenjualanWindow(QWidget):
 
     def _add_product_from_search(self):
         if self._skip_next_search_submit:
-            self._skip_next_search_submit = False
             return
 
         product = self._get_product_from_completer_selection()
