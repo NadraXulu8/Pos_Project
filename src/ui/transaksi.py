@@ -4,7 +4,7 @@ from PySide6.QtSvgWidgets import QSvgWidget
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout,
     QFrame, QLabel, QLineEdit, QComboBox, QPushButton, QTableWidget, QAbstractItemView, QHeaderView, QGridLayout,
-    QTextEdit, QCompleter, QTableWidgetItem, QSpinBox, QAbstractSpinBox, QScrollArea, QCheckBox, QDialog
+    QTextEdit, QCompleter, QTableWidgetItem, QSpinBox, QAbstractSpinBox, QScrollArea, QCheckBox, QDialog, QApplication
 )
 
 from config import asset_path, asset_uri
@@ -541,8 +541,7 @@ class PenjualanWindow(QWidget):
         if not product:
             return
 
-        self._skip_next_search_submit = True
-        QTimer.singleShot(0, lambda: setattr(self, "_skip_next_search_submit", False))
+        self._skip_next_search_submit = QApplication.mouseButtons() == Qt.MouseButton.NoButton
         self._add_product_to_cart(product)
         self.search_hint_label.setText(f"Produk {product['nama_barang']} ditambahkan ke keranjang.")
         QTimer.singleShot(0, self.search_input.clear)
@@ -612,6 +611,7 @@ class PenjualanWindow(QWidget):
 
     def _add_product_from_search(self):
         if self._skip_next_search_submit:
+            self._skip_next_search_submit = False
             return
 
         product = self._get_product_from_completer_selection()
