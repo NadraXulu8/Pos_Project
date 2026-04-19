@@ -33,7 +33,7 @@ class PenjualanWindow(QWidget):
         self.cart_items = []
         self.search_suggestions = []
         self.search_lookup = {}
-        self._skip_submit_after_completer = False
+        self._pending_search_add_signature = None
         self.discount_popup = None
 
         self.setup_ui()
@@ -513,9 +513,6 @@ class PenjualanWindow(QWidget):
         self.customer_completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
 
     def _handle_search_text_changed(self, text: str):
-        if self._skip_submit_after_completer and (not text or text not in self.search_lookup):
-            self._skip_submit_after_completer = False
-
         if text in self.search_lookup:
             return
 
@@ -544,8 +541,7 @@ class PenjualanWindow(QWidget):
         if not product:
             return
 
-        self._skip_submit_after_completer = True
-        self._add_product_to_cart(product)
+        self._add_product_to_cart_once_per_event_cycle(product)
         self.search_hint_label.setText(f"Produk {product['nama_barang']} ditambahkan ke keranjang.")
         QTimer.singleShot(0, self.search_input.clear)
 
@@ -613,10 +609,6 @@ class PenjualanWindow(QWidget):
         return self.search_lookup.get(str(selected_text))
 
     def _add_product_from_search(self):
-        if self._skip_submit_after_completer:
-            self._skip_submit_after_completer = False
-            return
-
         product = self._get_product_from_completer_selection()
         if not product:
             keyword = self.search_input.text().strip().lower()
@@ -633,10 +625,22 @@ class PenjualanWindow(QWidget):
             self.search_hint_label.setText(f"Stok produk {product['nama_barang']} sedang habis.")
             return
 
-        self._add_product_to_cart(product)
+        self._add_product_to_cart_once_per_event_cycle(product)
         QTimer.singleShot(0, self.search_input.clear)
         self._refresh_search_suggestions()
         self.search_hint_label.setText(f"Produk {product['nama_barang']} ditambahkan ke keranjang.")
+
+    def _clear_pending_search_add_signature(self):
+        self._pending_search_add_signature = None
+
+    def _add_product_to_cart_once_per_event_cycle(self, product: dict):
+        signature = (str(product.get("sku")), str(product.get("tipe")).casefold())
+        if signature == self._pending_search_add_signature:
+            return
+
+        self._pending_search_add_signature = signature
+        QTimer.singleShot(0, self._clear_pending_search_add_signature)
+        self._add_product_to_cart(product)
 
     def _add_product_to_cart(self, product: dict):
         existing_index = self._get_cart_index(product["sku"], product["tipe"])
