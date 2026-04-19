@@ -633,8 +633,14 @@ class PenjualanWindow(QWidget):
     def _clear_pending_search_add_signature(self):
         self._pending_search_add_signature = None
 
+    def _get_product_signature(self, product: dict):
+        return (
+            str(product.get("sku", "")),
+            str(product.get("tipe", "")).casefold(),
+        )
+
     def _add_product_to_cart_once_per_event_cycle(self, product: dict):
-        signature = (str(product.get("sku")), str(product.get("tipe")).casefold())
+        signature = self._get_product_signature(product)
         if signature == self._pending_search_add_signature:
             return
 
