@@ -255,16 +255,23 @@ class ActionDelegate(QStyledItemDelegate):
         return super().eventFilter(obj, event)
 
     def _on_edit_clicked(self, row: int):
-        table = self._table
-        user_table = table.parent()
-        if hasattr(user_table, 'edit_requested'):
+        user_table = self._resolve_user_table()
+        if user_table is not None and hasattr(user_table, 'edit_requested'):
             user_table.edit_requested.emit(row)
 
     def _on_delete_clicked(self, row: int):
-        table = self._table
-        user_table = table.parent()
-        if hasattr(user_table, 'delete_requested'):
+        user_table = self._resolve_user_table()
+        if user_table is not None and hasattr(user_table, 'delete_requested'):
             user_table.delete_requested.emit(row)
+
+    def _resolve_user_table(self):
+        """Temukan owner widget yang memiliki signal edit/delete."""
+        widget = self._table
+        while widget is not None:
+            if hasattr(widget, 'edit_requested') and hasattr(widget, 'delete_requested'):
+                return widget
+            widget = widget.parentWidget()
+        return None
 
 
 class UserTable(BaseTableWidget):
