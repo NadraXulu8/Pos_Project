@@ -302,7 +302,8 @@ class UserTable(BaseTableWidget):
             }
         """)
 
-        self.table.setRowCount(0)
+        for row in range(self.TABLE_ROW_COUNT):
+            self.table.setRowHeight(row, self.ROW_HEIGHT)
 
     def _apply_delegates(self):
         """Pasang delegate khusus pada kolom Password dan Aksi."""
@@ -547,9 +548,14 @@ class UserAdministrator(BaseDataPage):
 
     def custom_page(self):
         p = int(self.page_input.text().strip() or "1")
-        if p >= self.pages: self.page_input.setText(str(self.pages)); self.table_data((self.pages - 1) * self.USERS_PER_PAGE)
-        elif p <= 0: self.page_input.setText("1"); self.table_data()
-        else: self.table_data((p - 1) * self.USERS_PER_PAGE)
+        if p >= self.pages:
+            self.page_input.setText(str(self.pages))
+            self.table_data((self.pages - 1) * self.USERS_PER_PAGE)
+        elif p <= 0:
+            self.page_input.setText("1")
+            self.table_data()
+        else:
+            self.table_data((p - 1) * self.USERS_PER_PAGE)
 
     def next_page(self):
         p = int(self.page_input.text().strip() or "1")
