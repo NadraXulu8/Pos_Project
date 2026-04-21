@@ -73,7 +73,7 @@ class UserFormDialog(QDialog):
 class DeleteUserConfirmDialog(QDialog):
     def __init__(self, user_name: str, parent=None):
         super().__init__(parent)
-        self.user_name = user_name
+        self.user_name = str(user_name or "").strip()
         self.required_text = f"HAPUS User {self.user_name}"
 
         self.setWindowTitle("Verifikasi Hapus User")
@@ -544,13 +544,18 @@ class UserAdministrator(BaseDataPage):
 
     def _on_hapus_user_by_row(self, row: int):
         user_data = self.table_user._all_rows[row]
-        verify_dialog = DeleteUserConfirmDialog(user_data.get('nama', ''), self)
+        user_name = str(user_data.get('nama', '')).strip()
+        if not user_name:
+            CustomMessageBox.critical(self, "Gagal", "Nama user tidak valid untuk proses hapus.")
+            return
+
+        verify_dialog = DeleteUserConfirmDialog(user_name, self)
         if verify_dialog.exec() != QDialog.DialogCode.Accepted:
             return
 
         confirm = CustomMessageBox.question(
             self, "Konfirmasi Hapus",
-            f"Apakah Anda yakin ingin menghapus user {user_data.get('nama')}?"
+            f"Apakah Anda yakin ingin menghapus user {user_name}?"
         )
         if confirm == QMessageBox.StandardButton.Yes:
             try:
