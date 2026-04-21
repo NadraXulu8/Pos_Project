@@ -315,6 +315,7 @@ class UserTable(BaseTableWidget):
         """Override: atur data dan pastikan row height konsisten."""
         super().set_data(rows)
         self.table.setRowCount(len(rows))
+        self.table.verticalHeader().setDefaultSectionSize(self.ROW_HEIGHT)
 
 
 class UserAdministrator(BaseDataPage):
@@ -547,6 +548,9 @@ class UserAdministrator(BaseDataPage):
         if p <= 0:
             self.page_input.setText("1")
             self.table_data()
+        elif p == self.pages:
+            self.page_input.setText(str(self.pages))
+            self.table_data((self.pages - 1) * self.USERS_PER_PAGE)
         elif p > self.pages:
             self.page_input.setText(str(self.pages))
             self.table_data((self.pages - 1) * self.USERS_PER_PAGE)
