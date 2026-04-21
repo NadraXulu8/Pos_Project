@@ -156,7 +156,7 @@ class ActionDelegate(QStyledItemDelegate):
         self._table.viewport().setMouseTracking(True)
         self._table.destroyed.connect(self._on_table_destroyed)
 
-    def _on_table_destroyed(self):
+    def _on_table_destroyed(self, *_):
         self._table = None
         self._hover_row = -1
         self._hover_zone = ""
@@ -165,7 +165,7 @@ class ActionDelegate(QStyledItemDelegate):
     def _is_object_valid(obj) -> bool:
         try:
             return obj is not None and isValid(obj)
-        except Exception:
+        except (RuntimeError, TypeError):
             return False
 
     def _get_table_and_viewport(self):
