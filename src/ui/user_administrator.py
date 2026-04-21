@@ -165,7 +165,7 @@ class ActionDelegate(QStyledItemDelegate):
     def _is_object_valid(obj) -> bool:
         try:
             return obj is not None and isValid(obj)
-        except (RuntimeError, TypeError):
+        except RuntimeError:
             return False
 
     def _get_table_and_viewport(self):
@@ -297,11 +297,13 @@ class ActionDelegate(QStyledItemDelegate):
 
     def _resolve_user_table(self):
         """Temukan owner widget yang memiliki signal edit/delete."""
-        widget, _ = self._get_table_and_viewport()
+        widget = self.parent()
+        if not self._is_object_valid(widget):
+            widget = self._table if self._is_object_valid(self._table) else None
         while widget is not None:
             if hasattr(widget, 'edit_requested') and hasattr(widget, 'delete_requested'):
                 return widget
-            widget = widget.parentWidget()
+            widget = widget.parentWidget() if hasattr(widget, "parentWidget") else None
         return None
 
 
