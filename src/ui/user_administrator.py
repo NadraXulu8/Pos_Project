@@ -315,8 +315,6 @@ class UserTable(BaseTableWidget):
         """Override: atur data dan pastikan row height konsisten."""
         super().set_data(rows)
         self.table.setRowCount(len(rows))
-        for row in range(self.table.rowCount()):
-            self.table.setRowHeight(row, self.ROW_HEIGHT)
 
 
 class UserAdministrator(BaseDataPage):
@@ -546,7 +544,7 @@ class UserAdministrator(BaseDataPage):
 
     def custom_page(self):
         p = int(self.page_input.text().strip() or "1")
-        if p >= self.pages:
+        if p > self.pages:
             self.page_input.setText(str(self.pages))
             self.table_data((self.pages - 1) * self.USERS_PER_PAGE)
         elif p <= 0:
