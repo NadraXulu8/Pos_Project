@@ -263,15 +263,30 @@ class DatabaseManager:
             conn.close()
 
     def delete_user(self, user_id):
-        """Menghapus user. Cegah penghapusan admin fallback (id 1)."""
-        if str(user_id) == "1":
-            raise ValueError("Tidak dapat menghapus admin utama!")
-            
+        """Menghapus user dengan menjaga minimal 1 role Super_user tetap ada."""
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
-        conn.commit()
-        conn.close()
+        try:
+            cursor.execute("SELECT role FROM users WHERE id = ?", (user_id,))
+            row = cursor.fetchone()
+            if not row:
+                raise ValueError("User tidak ditemukan")
+
+            target_role = row[0]
+
+            cursor.execute("SELECT COUNT(*) FROM users WHERE role = ?", ("Super_user",))
+            super_user_count = int(cursor.fetchone()[0] or 0)
+
+            if super_user_count <= 0:
+                raise ValueError("Tidak ada Super_user di database. Hapus user dibatalkan.")
+
+            if target_role == "Super_user" and super_user_count <= 1:
+                raise ValueError("Tidak dapat menghapus Super_user terakhir!")
+
+            cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            conn.commit()
+        finally:
+            conn.close()
 
     def verify_login(self, key):
         """
