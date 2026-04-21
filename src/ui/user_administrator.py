@@ -10,7 +10,7 @@ Halaman ini menampilkan daftar user dalam tabel dengan fitur:
 """
 
 from PySide6.QtCore import (
-    Qt, QRect, QSize, QPoint, QModelIndex, QPersistentModelIndex, QEvent, Signal
+    Qt, QRect, QSize, QPoint, QModelIndex, QPersistentModelIndex, QEvent, Signal, QObject
 )
 from PySide6.QtGui import (
     QFont, QShortcut, QKeySequence, QIcon, QPainter, QPen,
@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QComboBox,
     QStackedWidget, QStyledItemDelegate, QStyle,
     QStyleOptionViewItem, QApplication, QToolTip,
-    QMessageBox, QDialog, QFormLayout, QLineEdit, QDialogButtonBox, QLabel
+    QMessageBox, QDialog, QFormLayout, QLineEdit, QDialogButtonBox, QLabel, QTableWidget
 )
 from shiboken6 import isValid
 
@@ -142,9 +142,9 @@ class ActionDelegate(QStyledItemDelegate):
     - Tooltip "Edit User" / "Hapus User".
     """
 
-    def __init__(self, table_widget, parent=None):
+    def __init__(self, table_widget: QTableWidget, parent=None):
         super().__init__(parent)
-        self._table = table_widget
+        self._table: QTableWidget | None = table_widget
 
         self._icon_edit = QIcon(asset_path("edit_button.svg"))
         self._icon_delete = QIcon(asset_path("remove_button.svg"))
@@ -152,9 +152,9 @@ class ActionDelegate(QStyledItemDelegate):
         self._hover_row = -1
         self._hover_zone = ""
 
-        self._table.viewport().installEventFilter(self)
-        self._table.viewport().setMouseTracking(True)
-        self._table.destroyed.connect(self._on_table_destroyed)
+        table_widget.viewport().installEventFilter(self)
+        table_widget.viewport().setMouseTracking(True)
+        table_widget.destroyed.connect(self._on_table_destroyed)
 
     def _on_table_destroyed(self, *_):
         self._table = None
@@ -169,10 +169,10 @@ class ActionDelegate(QStyledItemDelegate):
             return False
 
     def _get_table_and_viewport(self):
-        if not self._is_object_valid(self._table):
+        table = self._table
+        if table is None or not self._is_object_valid(table):
             return None, None
         try:
-            table = self._table
             viewport = table.viewport()
         except RuntimeError:
             return None, None
@@ -287,23 +287,27 @@ class ActionDelegate(QStyledItemDelegate):
 
     def _on_edit_clicked(self, row: int):
         user_table = self._resolve_user_table()
-        if user_table is not None and hasattr(user_table, 'edit_requested'):
-            user_table.edit_requested.emit(row)
+        if user_table is not None:
+            edit_signal = getattr(user_table, "edit_requested", None)
+            if edit_signal is not None:
+                edit_signal.emit(row)
 
     def _on_delete_clicked(self, row: int):
         user_table = self._resolve_user_table()
-        if user_table is not None and hasattr(user_table, 'delete_requested'):
-            user_table.delete_requested.emit(row)
+        if user_table is not None:
+            delete_signal = getattr(user_table, "delete_requested", None)
+            if delete_signal is not None:
+                delete_signal.emit(row)
 
     def _resolve_user_table(self):
         """Temukan owner widget yang memiliki signal edit/delete."""
-        widget = self.parent()
+        widget: QObject | None = self.parent()
         if not self._is_object_valid(widget):
             widget = self._table if self._is_object_valid(self._table) else None
         while widget is not None:
             if hasattr(widget, 'edit_requested') and hasattr(widget, 'delete_requested'):
                 return widget
-            widget = widget.parentWidget() if hasattr(widget, "parentWidget") else None
+            widget = widget.parent()
         return None
 
 
