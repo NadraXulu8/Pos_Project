@@ -162,13 +162,13 @@ class ActionDelegate(QStyledItemDelegate):
         self._hover_zone = ""
 
     @staticmethod
-    def _is_object_valid(obj) -> bool:
+    def _is_object_valid(obj: QObject | None) -> bool:
         try:
             return obj is not None and isValid(obj)
         except RuntimeError:
             return False
 
-    def _get_table_and_viewport(self):
+    def _get_table_and_viewport(self) -> tuple[QTableWidget | None, QWidget | None]:
         table = self._table
         if table is None or not self._is_object_valid(table):
             return None, None
@@ -299,7 +299,7 @@ class ActionDelegate(QStyledItemDelegate):
             if delete_signal is not None:
                 delete_signal.emit(row)
 
-    def _resolve_user_table(self):
+    def _resolve_user_table(self) -> QObject | None:
         """Temukan owner widget yang memiliki signal edit/delete."""
         widget: QObject | None = self.parent()
         if not self._is_object_valid(widget):
