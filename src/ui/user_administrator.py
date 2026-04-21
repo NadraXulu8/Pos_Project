@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QStyleOptionViewItem, QApplication, QToolTip,
     QMessageBox, QDialog, QFormLayout, QLineEdit, QDialogButtonBox, QLabel
 )
+from shiboken6 import isValid
 
 import math
 from src.database.database import DatabaseManager
@@ -153,6 +154,32 @@ class ActionDelegate(QStyledItemDelegate):
 
         self._table.viewport().installEventFilter(self)
         self._table.viewport().setMouseTracking(True)
+        self._table.destroyed.connect(self._on_table_destroyed)
+
+    def _on_table_destroyed(self):
+        self._table = None
+        self._hover_row = -1
+        self._hover_zone = ""
+
+    @staticmethod
+    def _is_object_valid(obj) -> bool:
+        try:
+            return obj is not None and isValid(obj)
+        except Exception:
+            return False
+
+    def _get_table_and_viewport(self):
+        if not self._is_object_valid(self._table):
+            return None, None
+        try:
+            table = self._table
+            viewport = table.viewport()
+        except RuntimeError:
+            return None, None
+
+        if not self._is_object_valid(viewport):
+            return None, None
+        return table, viewport
 
     def _icon_rects(self, cell_rect: QRect):
         """Kembalikan tuple (edit_rect, delete_rect) relatif terhadap cell."""
@@ -191,7 +218,11 @@ class ActionDelegate(QStyledItemDelegate):
         painter.restore()
 
     def eventFilter(self, obj, event: QEvent):
-        if obj is not self._table.viewport():
+        table, viewport = self._get_table_and_viewport()
+        if table is None or viewport is None:
+            return False
+
+        if obj is not viewport:
             return super().eventFilter(obj, event)
 
         event_type = event.type()
@@ -199,10 +230,10 @@ class ActionDelegate(QStyledItemDelegate):
         if event_type == QEvent.Type.MouseMove:
             mouse_event: QMouseEvent = event  # type: ignore[assignment]
             pos = mouse_event.position().toPoint()
-            index = self._table.indexAt(pos)
+            index = table.indexAt(pos)
 
             if index.isValid() and index.column() == COL_AKSI:
-                cell_rect = self._table.visualRect(index)
+                cell_rect = table.visualRect(index)
                 edit_rect, delete_rect = self._icon_rects(cell_rect)
 
                 old_row, old_zone = self._hover_row, self._hover_zone
@@ -210,35 +241,35 @@ class ActionDelegate(QStyledItemDelegate):
                 if edit_rect.contains(pos):
                     self._hover_row = index.row()
                     self._hover_zone = "edit"
-                    self._table.viewport().setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-                    QToolTip.showText(self._table.viewport().mapToGlobal(pos), "Edit User")
+                    viewport.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+                    QToolTip.showText(viewport.mapToGlobal(pos), "Edit User")
                 elif delete_rect.contains(pos):
                     self._hover_row = index.row()
                     self._hover_zone = "delete"
-                    self._table.viewport().setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-                    QToolTip.showText(self._table.viewport().mapToGlobal(pos), "Hapus User")
+                    viewport.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+                    QToolTip.showText(viewport.mapToGlobal(pos), "Hapus User")
                 else:
                     self._hover_row = -1
                     self._hover_zone = ""
-                    self._table.viewport().unsetCursor()
+                    viewport.unsetCursor()
                     QToolTip.hideText()
 
                 if (old_row, old_zone) != (self._hover_row, self._hover_zone):
-                    self._table.viewport().update()
+                    viewport.update()
             else:
                 if self._hover_row != -1:
                     self._hover_row = -1
                     self._hover_zone = ""
-                    self._table.viewport().unsetCursor()
-                    self._table.viewport().update()
+                    viewport.unsetCursor()
+                    viewport.update()
 
         elif event_type == QEvent.Type.MouseButtonRelease:
             mouse_event_rel: QMouseEvent = event  # type: ignore[assignment]
             pos = mouse_event_rel.position().toPoint()
-            index = self._table.indexAt(pos)
+            index = table.indexAt(pos)
 
             if index.isValid() and index.column() == COL_AKSI:
-                cell_rect = self._table.visualRect(index)
+                cell_rect = table.visualRect(index)
                 edit_rect, delete_rect = self._icon_rects(cell_rect)
 
                 if edit_rect.contains(pos):
@@ -250,7 +281,7 @@ class ActionDelegate(QStyledItemDelegate):
             if self._hover_row != -1:
                 self._hover_row = -1
                 self._hover_zone = ""
-                self._table.viewport().update()
+                viewport.update()
 
         return super().eventFilter(obj, event)
 
@@ -266,7 +297,7 @@ class ActionDelegate(QStyledItemDelegate):
 
     def _resolve_user_table(self):
         """Temukan owner widget yang memiliki signal edit/delete."""
-        widget = self._table
+        widget, _ = self._get_table_and_viewport()
         while widget is not None:
             if hasattr(widget, 'edit_requested') and hasattr(widget, 'delete_requested'):
                 return widget
