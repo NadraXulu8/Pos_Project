@@ -235,7 +235,8 @@ class UserTable(BaseTableWidget):
     delete_requested = Signal(int)
 
     TABLE_WIDTH = 800
-    TABLE_ROW_COUNT = 5
+    TABLE_ROW_COUNT = 3
+    ROW_HEIGHT = 45
     COLUMN_WIDTHS = [60, 0, 120, 0, 120]
     HEADERS = ["ID", "NAMA", "ROLE", "KUNCI/PASSWORD", "AKSI"]
     FIELDS = ["id", "nama", "role", "password", "aksi"]
@@ -301,8 +302,7 @@ class UserTable(BaseTableWidget):
             }
         """)
 
-        for row in range(self.TABLE_ROW_COUNT):
-            self.table.setRowHeight(row, 45)
+        self.table.setRowCount(0)
 
     def _apply_delegates(self):
         """Pasang delegate khusus pada kolom Password dan Aksi."""
@@ -314,9 +314,10 @@ class UserTable(BaseTableWidget):
 
     def set_data(self, rows: list[dict]):
         """Override: atur data dan pastikan row height konsisten."""
+        self.table.setRowCount(len(rows))
         super().set_data(rows)
         for row in range(self.table.rowCount()):
-            self.table.setRowHeight(row, 45)
+            self.table.setRowHeight(row, self.ROW_HEIGHT)
 
 
 class UserAdministrator(BaseDataPage):
@@ -327,6 +328,7 @@ class UserAdministrator(BaseDataPage):
 
     HEADER_TITLE = "USER MANAGEMENT"
     SEARCH_PLACEHOLDER = "Cari Nama atau ID User ..."
+    USERS_PER_PAGE = 3
 
     def __init__(self):
         super().__init__()
@@ -530,32 +532,32 @@ class UserAdministrator(BaseDataPage):
         search_text = getattr(self, 'search_input', None)
         search_str = search_text.text().strip() if search_text else ""
 
-        data = db.get_users_for_table(role_filter, search_str, limit=5, offset=offset)
+        data = db.get_users_for_table(role_filter, search_str, limit=self.USERS_PER_PAGE, offset=offset)
         self.table_user.set_data(data)
 
         total_rows = db.get_users_count(role_filter, search_str)
-        pages = math.ceil(total_rows / 5) if total_rows > 0 else 1
+        pages = math.ceil(total_rows / self.USERS_PER_PAGE) if total_rows > 0 else 1
         self.pages = pages
 
         if offset == 0:
             self.page_input.setText("1")
         else:
-            text_page = int(offset / 5) + 1
+            text_page = int(offset / self.USERS_PER_PAGE) + 1
             self.page_input.setText(str(text_page))
 
     def custom_page(self):
         p = int(self.page_input.text().strip() or "1")
-        if p >= self.pages: self.page_input.setText(str(self.pages)); self.table_data((self.pages - 1) * 5)
+        if p >= self.pages: self.page_input.setText(str(self.pages)); self.table_data((self.pages - 1) * self.USERS_PER_PAGE)
         elif p <= 0: self.page_input.setText("1"); self.table_data()
-        else: self.table_data((p - 1) * 5)
+        else: self.table_data((p - 1) * self.USERS_PER_PAGE)
 
     def next_page(self):
         p = int(self.page_input.text().strip() or "1")
-        if p < getattr(self, 'pages', 1): self.table_data(p * 5)
+        if p < getattr(self, 'pages', 1): self.table_data(p * self.USERS_PER_PAGE)
 
     def prev_page(self):
         p = int(self.page_input.text().strip() or "1")
-        if p > 1: self.table_data((p - 2) * 5)
+        if p > 1: self.table_data((p - 2) * self.USERS_PER_PAGE)
 
     def on_reset_click(self):
         self.filter_role.setCurrentIndex(0)
