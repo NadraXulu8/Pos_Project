@@ -544,12 +544,12 @@ class UserAdministrator(BaseDataPage):
 
     def custom_page(self):
         p = int(self.page_input.text().strip() or "1")
-        if p > self.pages:
-            self.page_input.setText(str(self.pages))
-            self.table_data((self.pages - 1) * self.USERS_PER_PAGE)
-        elif p <= 0:
+        if p <= 0:
             self.page_input.setText("1")
             self.table_data()
+        elif p > self.pages:
+            self.page_input.setText(str(self.pages))
+            self.table_data((self.pages - 1) * self.USERS_PER_PAGE)
         else:
             self.table_data((p - 1) * self.USERS_PER_PAGE)
 
