@@ -144,7 +144,7 @@ def qapp():
         app.quit()
 
 
-def test_show_crash_dialog_fallback_when_dialog_fails(capsys, qapp):
+def test_show_crash_dialog_prints_to_stderr_when_dialog_raises_exception(capsys, qapp):
 
     class BrokenMessageBox:
         class Icon:
