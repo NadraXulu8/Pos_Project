@@ -275,9 +275,9 @@ class DatabaseManager:
             target_role = row[0]
 
             cursor.execute("SELECT COUNT(*) FROM users WHERE role = ?", ("Super_user",))
-            super_user_count = int(cursor.fetchone()[0] or 0)
+            super_user_count = cursor.fetchone()[0]
 
-            if super_user_count <= 0:
+            if super_user_count == 0:
                 raise ValueError("Tidak ada Super_user di database. Hapus user dibatalkan.")
 
             if target_role == "Super_user" and super_user_count <= 1:

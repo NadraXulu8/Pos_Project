@@ -102,7 +102,8 @@ class DeleteUserConfirmDialog(QDialog):
     def _validate_and_accept(self):
         if self.confirm_input.text().strip() != self.required_text:
             CustomMessageBox.critical(self, "Gagal", f"Teks harus: {self.required_text}")
-            self.reject()
+            self.confirm_input.setFocus()
+            self.confirm_input.selectAll()
             return
         self.accept()
 
