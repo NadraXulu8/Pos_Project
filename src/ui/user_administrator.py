@@ -301,9 +301,7 @@ class UserTable(BaseTableWidget):
                 height: 0px;
             }
         """)
-
-        for row in range(self.TABLE_ROW_COUNT):
-            self.table.setRowHeight(row, self.ROW_HEIGHT)
+        self.table.verticalHeader().setDefaultSectionSize(self.ROW_HEIGHT)
 
     def _apply_delegates(self):
         """Pasang delegate khusus pada kolom Password dan Aksi."""
@@ -315,8 +313,8 @@ class UserTable(BaseTableWidget):
 
     def set_data(self, rows: list[dict]):
         """Override: atur data dan pastikan row height konsisten."""
-        self.table.setRowCount(len(rows))
         super().set_data(rows)
+        self.table.setRowCount(len(rows))
         for row in range(self.table.rowCount()):
             self.table.setRowHeight(row, self.ROW_HEIGHT)
 
