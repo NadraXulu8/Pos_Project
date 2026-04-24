@@ -10,6 +10,7 @@ Fixture `dashboard` tersedia via tests/ui/conftest.py.
 
 import pytest
 from PySide6.QtCore import Qt
+from src.ui.pengeluaran_toko import PengeluaranTokoWindow
 
 
 # ===========================================================================
@@ -89,3 +90,14 @@ class TestDashboard:
         current = widget.main_stack.currentWidget()
         assert current is widget.welcome_widget, \
             "WelcomeWindow harus menjadi widget aktif pertama"
+
+    def test_klik_buku_membuka_halaman_pengeluaran_toko(self, qtbot, dashboard):
+        """
+        Memastikan klik tombol buku membuka halaman PengeluaranTokoWindow
+        dan tidak lagi menampilkan error widget.
+        """
+        widget, _ = dashboard
+        widget.show()
+        qtbot.mouseClick(widget.button_buku_left, Qt.MouseButton.LeftButton)
+        assert isinstance(widget.main_stack.currentWidget(), PengeluaranTokoWindow)
+        assert widget.main_stack.currentWidget() is widget.pengeluaran_widget
