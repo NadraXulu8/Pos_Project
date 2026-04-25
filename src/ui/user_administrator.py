@@ -17,10 +17,10 @@ from PySide6.QtGui import (
     QColor, QCursor, QPixmap, QMouseEvent
 )
 from PySide6.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QComboBox,
+    QWidget, QHBoxLayout, QVBoxLayout, QComboBox, QLabel, QPushButton, QFrame,
     QStackedWidget, QStyledItemDelegate, QStyle,
     QStyleOptionViewItem, QApplication, QToolTip,
-    QMessageBox, QDialog, QFormLayout, QLineEdit, QDialogButtonBox, QTableWidget
+    QMessageBox, QDialog, QLineEdit, QTableWidget
 )
 from shiboken6 import isValid
 
@@ -32,42 +32,179 @@ from src.ui.ui_base import BaseTableWidget, BaseDataPage
 from src.utils.message import CustomMessageBox
 from src.ui.register import RegisterDialog
 from src.ui.delete_user_conf import DeleteUserConfirmDialog
+from src.ui.dialog_title_bar import DialogTitleBar
 
 class UserFormDialog(QDialog):
     def __init__(self, parent=None, user_data=None):
         super().__init__(parent)
-        self.setWindowTitle("Edit User" if user_data else "Tambah User")
-        self.setStyleSheet("""
-            QDialog { background-color: #1a1a1a; color: #ffffff; font-family: "Segoe UI"; }
-            QLabel { color: #ffffff; font-size: 14px; }
-            QLineEdit, QComboBox { 
-                background-color: #333333; color: #ffffff; 
-                border: 1px solid #555555; padding: 5px; border-radius: 4px; font-size: 14px;
-            }
-            QPushButton { background-color: #0d47a1; color: #ffffff; padding: 6px 12px; border-radius: 4px; font-weight: bold; }
-            QPushButton:hover { background-color: #1565c0; }
-        """)
-        
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setModal(True)
+
+        self.db = DatabaseManager()
+        self.id_user = user_data.get('id') if user_data else None
+
         self.nama_input, self.kunci_input, self.role_input = QLineEdit(), QLineEdit(), QComboBox()
+        self.otorisasi_input = QLineEdit()
         self.kunci_input.setPlaceholderText("Kosongkan jika tidak diubah" if user_data else "Harus 10 digit angka")
         self.kunci_input.setMaxLength(10)
         self.role_input.addItems(["Admin", "Super_user"])
-        
-        self.id_user = user_data.get('id') if user_data else None
+        self.otorisasi_input.setPlaceholderText("Masukkan kunci Super_user")
+        self.otorisasi_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self.otorisasi_input.setMaxLength(10)
+
+        input_style = """
+            QLineEdit, QComboBox {
+                background-color: #1a1a1a;
+                border: 2px solid #333333;
+                border-radius: 8px;
+                padding: 10px 12px;
+                color: #ffffff;
+                font-size: 14px;
+            }
+            QLineEdit:hover, QComboBox:hover {
+                border: 2px solid #00aaff;
+                background-color: #252525;
+            }
+            QLineEdit:focus, QComboBox:focus {
+                border: 2px solid #48c2ff;
+                background-color: #2a2a2a;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 26px;
+            }
+            QComboBox::down-arrow {
+                image: url(%s);
+                width: 18px;
+                height: 18px;
+            }
+        """ % asset_uri("panah atas bawah.png")
+        self.nama_input.setStyleSheet(input_style)
+        self.kunci_input.setStyleSheet(input_style)
+        self.role_input.setStyleSheet(input_style)
+        self.otorisasi_input.setStyleSheet(input_style)
+
         if user_data:
             self.nama_input.setText(user_data.get('nama', ''))
             if (idx := self.role_input.findText(user_data.get('role', 'Admin'))) >= 0: self.role_input.setCurrentIndex(idx)
-            
-        layout = QFormLayout(self)
-        layout.addRow("Nama User:", self.nama_input)
-        layout.addRow("Kunci Akses:", self.kunci_input)
-        layout.addRow("Role:", self.role_input)
-        
-        self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
-        layout.addWidget(self.buttons)
-        
+
+        root_layout = QVBoxLayout(self)
+        root_layout.setContentsMargins(10, 10, 10, 10)
+
+        root_frame = QFrame()
+        root_frame.setStyleSheet("""
+            QFrame {
+                border: 2px solid #00aaff;
+                border-radius: 10px;
+                background-color: #1a1a1a;
+            }
+            QLabel {
+                border: none;
+                color: #ffffff;
+            }
+        """)
+        frame_layout = QVBoxLayout(root_frame)
+        frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame_layout.setSpacing(0)
+
+        frame_layout.addWidget(DialogTitleBar("Edit User", self))
+
+        content = QWidget()
+        content.setStyleSheet("background: transparent; border: none;")
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(20, 18, 20, 20)
+        content_layout.setSpacing(14)
+
+        header_layout = QHBoxLayout()
+        header_layout.setSpacing(12)
+        header_icon = QLabel()
+        header_icon.setFixedSize(56, 56)
+        header_icon.setScaledContents(True)
+        header_icon.setPixmap(QPixmap(asset_path("manajemen putih.png")))
+        header_title = QLabel("Formulir Edit User")
+        header_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff;")
+        header_layout.addWidget(header_icon)
+        header_layout.addWidget(header_title)
+        header_layout.addStretch()
+        content_layout.addLayout(header_layout)
+
+        def add_field(label_text: str, widget: QWidget):
+            row = QVBoxLayout()
+            label = QLabel(label_text)
+            label.setStyleSheet("font-size: 13px; font-weight: 600;")
+            row.addWidget(label)
+            row.addWidget(widget)
+            content_layout.addLayout(row)
+
+        add_field("Nama User", self.nama_input)
+        add_field("Kunci Akses", self.kunci_input)
+        add_field("Role", self.role_input)
+        add_field("Kunci Otorisasi Admin", self.otorisasi_input)
+
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+
+        submit_btn = QPushButton("SUBMIT")
+        submit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        submit_btn.setFixedSize(130, 44)
+        submit_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #00aaff;
+                color: #ffffff;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #008ed6;
+            }
+        """)
+        submit_btn.clicked.connect(self.accept)
+        button_layout.addWidget(submit_btn)
+
+        cancel_btn = QPushButton("BATAL")
+        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn.setFixedSize(130, 44)
+        cancel_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #4b4b4b;
+                color: #ffffff;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #6a6a6a;
+            }
+        """)
+        cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(cancel_btn)
+
+        content_layout.addLayout(button_layout)
+
+        frame_layout.addWidget(content)
+        root_layout.addWidget(root_frame)
+        self.setMinimumSize(520, 500)
+
+    def accept(self):
+        otorisasi_key = self.otorisasi_input.text().strip()
+        if not otorisasi_key:
+            CustomMessageBox.critical(self, "Otorisasi Gagal", "Kunci Otorisasi Admin wajib diisi.")
+            return
+
+        is_valid, result = self.db.verify_login(otorisasi_key)
+        if not is_valid:
+            message = result if isinstance(result, str) else "Otorisasi gagal."
+            CustomMessageBox.critical(self, "Otorisasi Gagal", message)
+            return
+
+        if not isinstance(result, dict) or result.get("role") != "Super_user":
+            CustomMessageBox.critical(self, "Otorisasi Gagal", "Otorisasi gagal, Anda bukan Super_user")
+            return
+
+        super().accept()
+
     def get_data(self):
         return {"id": self.id_user, "nama": self.nama_input.text().strip(), "kunci": self.kunci_input.text().strip(), "role": self.role_input.currentText()}
 
