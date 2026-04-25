@@ -195,12 +195,12 @@ class UserFormDialog(QDialog):
 
         is_valid, result = self.db.verify_login(otorisasi_key)
         if not is_valid:
-            message = result if isinstance(result, str) else "Otorisasi gagal."
+            message = result if isinstance(result, str) else "Terjadi kesalahan saat memverifikasi otorisasi."
             CustomMessageBox.critical(self, "Otorisasi Gagal", message)
             return
 
         if not isinstance(result, dict) or result.get("role") != "Super_user":
-            CustomMessageBox.critical(self, "Otorisasi Gagal", "Otorisasi gagal, Anda bukan Super_user")
+            CustomMessageBox.critical(self, "Otorisasi Gagal", "Hanya Super_user yang dapat mengelola user.")
             return
 
         super().accept()
